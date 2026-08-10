@@ -46,7 +46,9 @@ GAME_MAIN_STAGED = "game_main.py"
 
 
 # Si aparece cualquiera de estas pistas en el codigo, el juego usa audio.
-AUDIO_HINTS = re.compile(r"mixer|\.mp3|\.ogg|\.wav|\.flac|Sound\(|music", re.IGNORECASE)
+# Las extensiones exigen final de palabra: sin eso, `game.waves_spawned`
+# contiene ".wav" y daba un falso positivo.
+AUDIO_HINTS = re.compile(r"mixer|Sound\(|\.(mp3|ogg|wav|flac)\b", re.IGNORECASE)
 
 
 class TransformError(RuntimeError):

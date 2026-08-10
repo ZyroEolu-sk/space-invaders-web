@@ -119,6 +119,12 @@ def main():
         page.wait_for_timeout(1500)
         page.screenshot(path=str(shots / "03-pausa.png"))
         pausado = hay_menu_pausa(page) > 100
+
+        # En pausa el fondo tampoco debe moverse.
+        quieto = not se_mueve(page)
+        print(f"2c. El fondo se queda quieto en pausa: {'SI' if quieto else 'NO'}")
+        if not quieto:
+            fallos.append("las estrellas siguen moviendose en pausa")
         print(f"2b. El boton de pausa abre el menu: {'SI' if pausado else 'NO'}")
         if not pausado:
             fallos.append("el boton de pausa no pausa")

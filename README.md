@@ -54,7 +54,10 @@ Teclado: flechas para moverse, espacio para disparar, Esc para pausar.
 
 En móvil y tablet aparece una botonera táctil superpuesta (`web/mobile_controls.py`):
 flechas, disparo y pausa (arriba a la derecha; el mismo botón pausa y reanuda,
-porque el juego alterna la pausa con Escape).
+porque el juego alterna la pausa con Escape). En pausa se detiene también el
+fondo de estrellas: `draw_bg_and_ui()` se llama fuera del `if not self.paused`,
+así que `web/main.py` anula el vector de movimiento mientras está pausado en
+vez de reimplementar el dibujado.
 El juego lee el teclado con `pygame.key.get_pressed()`, así que los botones
 sintetizan los mismos eventos `keydown`/`keyup` que mandaría un teclado físico:
 el juego no necesita saber que existe un móvil. Solo se muestran en pantallas

@@ -166,7 +166,9 @@ def main():
         "</script>\n"
     )
     if "var CDN =" not in html:
-        html = re.sub(r"(<html[^>]*>)", r"\1" + shim, html, count=1)
+        # Lambda a proposito: con una cadena, re.sub interpretaria los escapes
+        # del JavaScript inyectado.
+        html = re.sub(r"(<html[^>]*>)", lambda m: m.group(1) + shim, html, count=1)
         print("  inyectado shim que redirige el CDN al runtime local")
 
     index.write_text(html, encoding="utf-8")

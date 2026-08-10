@@ -9,6 +9,7 @@ tenga que tocar el codigo del juego lo menos posible.
 import asyncio
 import os
 import sys
+import traceback
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(ROOT, "src"))
@@ -88,6 +89,25 @@ if IS_WEB:
     game_main.sys.exit = _exit
 
 
+def _reporta_error(texto):
+    """Deja el traceback donde se pueda recuperar.
+
+    Un jugador que se encuentra un fallo no va a abrir la consola del
+    navegador: describe el error de memoria, y esa descripcion no basta para
+    diagnosticar nada. Guardandolo en localStorage, la capa de JS lo saca en
+    pantalla para que se pueda fotografiar, y ademas sobrevive a la recarga.
+    """
+    print(texto)
+    if not IS_WEB:
+        return
+    try:
+        from platform import window
+
+        window.localStorage.setItem("space_invaders_last_error", texto)
+    except Exception:
+        pass
+
+
 async def main():
     while True:
         try:
@@ -95,6 +115,9 @@ async def main():
             await juego.run()
         except _BackToMenu:
             continue  # Quit en web -> volver al inicio en vez de morir
+        except Exception:
+            _reporta_error(traceback.format_exc())
+            raise
         return
 
 

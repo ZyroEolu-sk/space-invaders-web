@@ -157,6 +157,41 @@ OVERLAY = """
     }, { passive: false });
   })();
 
+  // Si el juego revienta, main.py deja el traceback en localStorage. Lo
+  // sacamos en pantalla: un jugador no va a abrir la consola del navegador,
+  // pero si puede hacer una foto de esto.
+  (function muestraErrores() {
+    var CLAVE = "space_invaders_last_error";
+    setInterval(function () {
+      var texto;
+      try { texto = localStorage.getItem(CLAVE); } catch (e) { return; }
+      if (!texto || document.getElementById("error-juego")) return;
+
+      var caja = document.createElement("div");
+      caja.id = "error-juego";
+      caja.style.cssText =
+        "position:fixed;inset:0;z-index:2147483647;overflow:auto;" +
+        "background:rgba(0,0,0,.92);color:#ff8080;padding:20px;" +
+        "font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap";
+      // Ojo: \\n escapado, porque esto vive dentro de una cadena de Python y
+      // un salto de linea real romperia el literal de JavaScript.
+      caja.textContent =
+        "El juego ha fallado. Haz una captura de esto y pasasela a quien lo mantiene:\\n\\n" + texto;
+
+      var cerrar = document.createElement("button");
+      cerrar.textContent = "Cerrar y borrar";
+      cerrar.style.cssText =
+        "display:block;margin-top:20px;padding:10px 18px;font-size:14px;" +
+        "background:#333;color:#fff;border:1px solid #888;border-radius:8px";
+      cerrar.onclick = function () {
+        try { localStorage.removeItem(CLAVE); } catch (e) {}
+        caja.remove();
+      };
+      caja.appendChild(cerrar);
+      document.body.appendChild(caja);
+    }, 1000);
+  })();
+
   var botones = document.querySelectorAll("#mobile-controls button, #mobile-pause");
   botones.forEach(function (boton) {
     var info = TECLAS[boton.dataset.tecla];
@@ -198,10 +233,13 @@ def main():
         print("Los controles tactiles ya estaban puestos.")
         return 0
 
-    html, n = re.subn(r"</body>", OVERLAY + "</body>", html, count=1)
+    # El reemplazo va como lambda a proposito: re.sub interpreta las secuencias
+    # de escape de la cadena de reemplazo, asi que un "\\n" del JavaScript se
+    # convertiria en un salto de linea real y romperia el literal.
+    html, n = re.subn(r"</body>", lambda _: OVERLAY + "</body>", html, count=1)
     if n != 1:
         # El template de pygbag no siempre cierra body; caemos al final del html.
-        html, n = re.subn(r"</html>", OVERLAY + "</html>", html, count=1)
+        html, n = re.subn(r"</html>", lambda _: OVERLAY + "</html>", html, count=1)
     if n != 1:
         html += OVERLAY
 

@@ -23,7 +23,11 @@ MARK = "id=\"mobile-controls\""
 
 OVERLAY = """
 <style>
+/* Ocultos por defecto. Estas dos reglas van ANTES del media query: tienen la
+   misma especificidad, asi que si fueran despues ganarian ellas y los botones
+   no se verian nunca. */
 #mobile-controls { display: none; }
+#mobile-pause { display: none; }
 
 /* Solo en dispositivos sin raton: moviles y tablets. */
 @media (hover: none) and (pointer: coarse) {
@@ -64,8 +68,29 @@ OVERLAY = """
     font-size: 16px; letter-spacing: .05em;
     border-color: rgba(255,120,120,.8);
   }
+
+  /* La pausa va arriba y pequena: se usa poco y no debe estorbar al pulgar. */
+  #mobile-pause {
+    display: block;
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top));
+    right: 10px;
+    z-index: 2147483647;
+    width: 46px; height: 46px;
+    border-radius: 10px;
+    border: 2px solid rgba(255,255,255,.45);
+    background: rgba(0,0,0,.45);
+    color: #fff;
+    font-size: 17px;
+    touch-action: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #mobile-pause:active { background: rgba(255,255,255,.35); }
 }
 </style>
+
+<button type="button" id="mobile-pause" data-tecla="Escape" aria-label="Pausa">&#10074;&#10074;</button>
 
 <div id="mobile-controls">
   <div class="grupo">
@@ -86,7 +111,11 @@ OVERLAY = """
   var TECLAS = {
     ArrowLeft:  { key: "ArrowLeft",  code: "ArrowLeft",  keyCode: 37 },
     ArrowRight: { key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-    Space:      { key: " ",          code: "Space",      keyCode: 32 }
+    Space:      { key: " ",          code: "Space",      keyCode: 32 },
+    // El juego alterna la pausa en el KEYDOWN de Escape, asi que el mismo
+    // boton pausa y reanuda. Importa: los botones Resume/Quit del menu de
+    // pausa se pulsan con raton, y en un movil puede no haber raton.
+    Escape:     { key: "Escape",     code: "Escape",     keyCode: 27 }
   };
 
   function manda(tipo, info) {
@@ -101,7 +130,35 @@ OVERLAY = """
     document.dispatchEvent(ev);
   }
 
-  document.querySelectorAll("#mobile-controls button").forEach(function (boton) {
+  // Puente toque -> raton. pygbag NO convierte los toques en eventos de raton,
+  // y el juego usa MOUSEBUTTONDOWN para "press to start" y para los botones
+  // Resume / Retry / Quit. Sin esto, en un movil se puede jugar pero no se
+  // puede empezar ni reintentar: te quedas mirando la pantalla de Game Over.
+  (function puenteTactil() {
+    var canvas = document.getElementById("canvas");
+    if (!canvas) { setTimeout(puenteTactil, 300); return; }
+
+    function raton(tipo, toque) {
+      canvas.dispatchEvent(new MouseEvent(tipo, {
+        clientX: toque.clientX, clientY: toque.clientY,
+        button: 0, buttons: tipo === "mousedown" ? 1 : 0,
+        bubbles: true, cancelable: true
+      }));
+    }
+
+    canvas.addEventListener("touchstart", function (e) {
+      if (e.changedTouches.length) raton("mousedown", e.changedTouches[0]);
+      e.preventDefault();
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", function (e) {
+      if (e.changedTouches.length) raton("mouseup", e.changedTouches[0]);
+      e.preventDefault();
+    }, { passive: false });
+  })();
+
+  var botones = document.querySelectorAll("#mobile-controls button, #mobile-pause");
+  botones.forEach(function (boton) {
     var info = TECLAS[boton.dataset.tecla];
     var pulsado = false;
 

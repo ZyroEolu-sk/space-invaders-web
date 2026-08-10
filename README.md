@@ -52,14 +52,22 @@ que sea `.ogg`).
 
 Teclado: flechas para moverse, espacio para disparar, Esc para pausar.
 
-En móvil y tablet aparece una botonera táctil superpuesta (`web/mobile_controls.py`).
+En móvil y tablet aparece una botonera táctil superpuesta (`web/mobile_controls.py`):
+flechas, disparo y pausa (arriba a la derecha; el mismo botón pausa y reanuda,
+porque el juego alterna la pausa con Escape).
 El juego lee el teclado con `pygame.key.get_pressed()`, así que los botones
 sintetizan los mismos eventos `keydown`/`keyup` que mandaría un teclado físico:
 el juego no necesita saber que existe un móvil. Solo se muestran en pantallas
 sin ratón (`@media (hover: none) and (pointer: coarse)`).
 
+Además, pygbag **no** convierte los toques en eventos de ratón, y el juego usa
+`MOUSEBUTTONDOWN` para "press to start" y para Resume / Retry / Quit. Sin un
+puente toque→ratón se podía jugar en móvil pero no empezar ni reintentar. Ese
+puente también va en `web/mobile_controls.py`.
+
 ```bash
-python scripts/test_mobile.py   # emula un movil y comprueba que la nave se mueve
+python scripts/test_mobile.py        # la nave se mueve al pulsar una flecha
+python scripts/test_mobile_touch.py  # toques reales: arrancar, pausar, reanudar
 ```
 
 ## Compilar en local

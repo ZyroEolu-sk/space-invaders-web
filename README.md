@@ -42,6 +42,12 @@ esa copia. El submódulo nunca se modifica.
 4. **Botón Quit.** En una pestaña no existe "cerrar el programa", así que
    `sys.exit()` pasa a devolver al jugador a la pantalla de inicio.
 
+Además, `assets/audio/` no entra en el paquete mientras ningún módulo del juego
+use sonido — son dos `.mp3` huérfanos, y pygbag aborta el build con MP3 porque
+no es un formato válido en web. La comprobación se rehace en cada build: el día
+que el juego use audio de verdad, vuelve a copiarse solo (y entonces conviene
+que sea `.ogg`).
+
 ## Compilar en local
 
 ```bash

@@ -30,19 +30,17 @@ jobs:
         with:
           python-version: "3.12"
 
+      # pygbag convierte a ogg con ffmpeg cualquier audio que no sea apto para
+      # web, y aborta el build si no lo encuentra. Sin esto, un dia que el
+      # juego incorpore sonido fallaria solo aqui y no en local.
+      - name: Instalar ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
       - name: Instalar pygbag
         run: pip install pygbag==0.9.3
 
       - name: Compilar a WebAssembly
-        run: |
-          set -o pipefail
-          if ! python build.py 2>&1 | tee /tmp/build.log; then
-            echo "--- ultimas lineas del fallo ---"
-            tail -n 30 /tmp/build.log | while IFS= read -r linea; do
-              echo "::error::$linea"
-            done
-            exit 1
-          fi
+        run: python build.py
 
       - uses: actions/upload-pages-artifact@v3
         with:

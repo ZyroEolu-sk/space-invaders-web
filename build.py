@@ -45,8 +45,16 @@ GAME_MAIN = "main.py"
 GAME_MAIN_STAGED = "game_main.py"
 
 
+# Si aparece cualquiera de estas pistas en el codigo, el juego usa audio.
+AUDIO_HINTS = re.compile(r"mixer|\.mp3|\.ogg|\.wav|\.flac|Sound\(|music", re.IGNORECASE)
+
+
 class TransformError(RuntimeError):
     """El codigo del juego cambio y una transformacion ya no encaja."""
+
+
+def audio_is_used(sources):
+    return any(AUDIO_HINTS.search(text) for text in sources)
 
 
 def _sub(pattern, repl, text, expected, what):
@@ -113,8 +121,10 @@ def stage():
     if not any(m.name == GAME_MAIN for m in modules):
         raise TransformError(f"No encuentro game/src/{GAME_MAIN}")
 
+    sources = []
     for module in modules:
         text = module.read_text(encoding="utf-8")
+        sources.append(text)
         name = module.name
         if name == GAME_MAIN:
             text = transform_game_main(text)
@@ -122,8 +132,19 @@ def stage():
         (STAGE / "src" / name).write_text(text, encoding="utf-8")
         print(f"  src/{module.name} -> src/{name}")
 
-    shutil.copytree(GAME_ASSETS, STAGE / "assets")
-    print(f"  assets/ -> assets/")
+    # pygbag rechaza el mp3 en web: intenta convertirlo a ogg con ffmpeg y, si
+    # no lo encuentra, aborta el build entero. El juego arrastra dos mp3 que no
+    # usa nadie, asi que no tiene sentido meterlos en el paquete. La condicion
+    # se recalcula en cada build: el dia que el juego use audio de verdad,
+    # vuelven a copiarse solos.
+    ignore = None
+    if audio_is_used(sources):
+        print("  assets/ -> assets/  (el juego usa audio: se copia entero)")
+    else:
+        ignore = shutil.ignore_patterns("audio")
+        print("  assets/ -> assets/  (sin audio: el juego no lo usa)")
+
+    shutil.copytree(GAME_ASSETS, STAGE / "assets", ignore=ignore)
 
     for extra in ("main.py", "storage.py"):
         shutil.copy(WEB / extra, STAGE / extra)

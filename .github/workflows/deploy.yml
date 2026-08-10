@@ -34,7 +34,15 @@ jobs:
         run: pip install pygbag==0.9.3
 
       - name: Compilar a WebAssembly
-        run: python build.py
+        run: |
+          set -o pipefail
+          if ! python build.py 2>&1 | tee /tmp/build.log; then
+            echo "--- ultimas lineas del fallo ---"
+            tail -n 30 /tmp/build.log | while IFS= read -r linea; do
+              echo "::error::$linea"
+            done
+            exit 1
+          fi
 
       - uses: actions/upload-pages-artifact@v3
         with:

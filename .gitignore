@@ -1,0 +1,8 @@
+# Resultado del build: se genera con `python build.py`, no se versiona.
+build/
+dist/
+
+# Entorno local
+.venv/
+__pycache__/
+*.py[cod]

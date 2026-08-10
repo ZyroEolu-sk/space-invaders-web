@@ -53,24 +53,6 @@ def _save_score(self):
 game_main.Game.save_score = _save_score
 
 
-# --- Estrellas quietas en pausa ---------------------------------------------
-# draw_bg_and_ui() se llama fuera del `if not self.paused`, asi que el fondo
-# sigue desplazandose con el juego congelado. En vez de reimplementar el
-# dibujado (que se quedaria desincronizado del original), basta con anular el
-# vector de movimiento mientras esta en pausa.
-
-_direccion_original = game_main.Game._get_star_direction_by_level
-
-
-def _direccion_estrellas(self):
-    if self.paused:
-        return 0, 0
-    return _direccion_original(self)
-
-
-game_main.Game._get_star_direction_by_level = _direccion_estrellas
-
-
 # --- Botones de salir -------------------------------------------------------
 # En una pestana del navegador no existe "cerrar el programa": un sys.exit()
 # deja al jugador ante un lienzo muerto que solo se arregla recargando. En vez

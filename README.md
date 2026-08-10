@@ -48,6 +48,20 @@ no es un formato válido en web. La comprobación se rehace en cada build: el d�
 que el juego use audio de verdad, vuelve a copiarse solo (y entonces conviene
 que sea `.ogg`).
 
+## Controles
+
+Teclado: flechas para moverse, espacio para disparar, Esc para pausar.
+
+En móvil y tablet aparece una botonera táctil superpuesta (`web/mobile_controls.py`).
+El juego lee el teclado con `pygame.key.get_pressed()`, así que los botones
+sintetizan los mismos eventos `keydown`/`keyup` que mandaría un teclado físico:
+el juego no necesita saber que existe un móvil. Solo se muestran en pantallas
+sin ratón (`@media (hover: none) and (pointer: coarse)`).
+
+```bash
+python scripts/test_mobile.py   # emula un movil y comprueba que la nave se mueve
+```
+
 ## Compilar en local
 
 ```bash

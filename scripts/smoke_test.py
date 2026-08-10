@@ -45,9 +45,13 @@ def main():
         help="bloquea toda peticion fuera de localhost; si el juego sigue "
              "arrancando, la web es autocontenida de verdad",
     )
+    parser.add_argument(
+        "--url",
+        help="probar un sitio ya publicado en vez de dist/ en local",
+    )
     args = parser.parse_args()
 
-    if not (DIST / "index.html").is_file():
+    if not args.url and not (DIST / "index.html").is_file():
         sys.exit("No hay dist/index.html. Ejecuta antes: python build.py")
 
     shots = Path(args.shots)
@@ -55,7 +59,8 @@ def main():
 
     from playwright.sync_api import sync_playwright
 
-    httpd = serve()
+    httpd = serve() if not args.url else None
+    target = args.url or f"http://127.0.0.1:{PORT}/index.html"
     errors, logs = [], []
 
     with sync_playwright() as p:
@@ -77,7 +82,8 @@ def main():
 
             page.route("**/*", guard)
 
-        page.goto(f"http://127.0.0.1:{PORT}/index.html")
+        print(f"Probando: {target}")
+        page.goto(target, wait_until="commit")
 
         # pygbag tapa el canvas con un overlay de "pulsa para empezar" hasta que
         # hay una interaccion del usuario; el navegador lo exige para el audio.
@@ -103,7 +109,8 @@ def main():
 
         browser.close()
 
-    httpd.shutdown()
+    if httpd:
+        httpd.shutdown()
 
     print(f"Capturas en {shots}")
 

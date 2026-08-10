@@ -229,6 +229,10 @@ def main():
                 "seguir dependiendo del CDN de pygbag."
             )
 
+    print()
+    if subprocess.run([sys.executable, str(WEB / "mobile_controls.py")]).returncode != 0:
+        sys.exit("No se pudieron anadir los controles tactiles.")
+
     print(f"\nListo: {DIST}  ({dist_size() / 1024 / 1024:.1f} MiB)")
 
 
